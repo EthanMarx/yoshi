@@ -1,0 +1,65 @@
+# don't think we'll need docker version since
+# ultimately data jobs will likely be run 
+# on LDG. If possible, a workflow that pushes 
+# to /cvmfs so that containers are available
+# on LDG would be great.
+
+# workflow that builds docker container images
+# from the singularity apptainer definition files
+# we use for local development. Uses tar archives
+# to convert between the formats in order to handle
+# the large memory footprints of our containers without
+# toppling over the GitHub runner nodes this executes on.
+name: container-build 
+on: push
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+    - 
+      name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+  
+    - 
+      name: Log in to the Container registry
+      uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # build the singularity image as a sandbox directory
+    # inside a docker container that has singularity
+    # installed (take a big breath). Then tar that directory
+    # so that we can import it into docker. Doing everything
+    # in one fell swoop because of permissions discrepancies
+    # inside and outside the container.
+    -
+      name: Build singularity image
+      run: |
+        docker run \
+          --rm \
+          -v ${{ github.workspace }}:/opt/yoshi \
+          --workdir /opt/yoshi/data \
+          --privileged \
+          --entrypoint /bin/bash \
+          quay.io/singularity/singularity:v3.8.1 \
+          -c 'singularity build --sandbox /tmp/app apptainer.def && tar -czf /opt/yoshi/app.tar.gz -C /tmp/app .'
+
+    # now copy the fs contents into an empty
+    # container and push it to the registry
+    - 
+      name: build docker image
+      env:
+        tag: ${{ env.REGISTRY }}/ethanmarx/yoshi/yoshi:latest
+      run: |
+        cat app.tar.gz | docker import --change "ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" - ${{ env.tag }}
+        docker push ${{env.tag }}
