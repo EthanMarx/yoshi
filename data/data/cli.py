@@ -4,9 +4,10 @@ import os
 from gwpy.io.kerberos import kinit
 from gwpy.timeseries import TimeSeriesDict
 from jsonargparse import ActionConfigFile, ArgumentParser
-from utils.logging import configure_logging
 
 from data.find import DataQualityDict
+
+from .logging import configure_logging
 
 
 def fetch(

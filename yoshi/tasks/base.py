@@ -8,7 +8,8 @@ import law
 import luigi
 from law.contrib import singularity
 
-root = Path(__file__).resolve().parent.parent
+root = Path(__file__).resolve().parent.parent.parent
+print(root)
 
 
 class YoshiSandbox(singularity.SingularitySandbox):
@@ -42,7 +43,7 @@ class YoshiTask(law.SandboxTask):
     gpus = luigi.Parameter(default="")
 
     container_root = luigi.Parameter(
-        default=os.getenv("DEEPCLEAN_CONTAINER_ROOT", "")
+        default=os.getenv("YOSHI_CONTAINER_ROOT", "")
     )
 
     def __init__(self, *args, **kwargs):

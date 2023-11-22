@@ -19,7 +19,7 @@ class DataTask(YoshiTask):
 
     @property
     def cli(self):
-        cmd = [self.python, "/opt/yoshi/data"]
+        cmd = [self.python, "/opt/yoshi/data/data"]
         if self.job_log:
             cmd += ["--log-file", self.job_log]
         return cmd + [self.job_type]
@@ -44,6 +44,7 @@ class Query(DataTask):
     output_file = luigi.Parameter()
     min_duration = luigi.FloatParameter(default=0)
     flags = luigi.ListParameter(default=["DCS-ANALYSIS_READY_C01:1"])
+    ifo = luigi.Parameter(default="H1")
 
     def output(self):
         return law.LocalFileTarget(self.output_file)
@@ -72,7 +73,7 @@ class Fetch(DataTask, law.LocalWorkflow):
     data_dir = luigi.Parameter()
     min_duration = luigi.FloatParameter(default=0)
     max_duration = luigi.FloatParameter(default=-1)
-    prefix = luigi.Parameter(default="deepclean")
+    prefix = luigi.Parameter(default="yoshi")
     flags = luigi.ListParameter(default=["DCS-ANALYSIS_READY_C01:1"])
     segments_file = luigi.Parameter(default="")
 
