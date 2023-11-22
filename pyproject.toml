@@ -16,6 +16,11 @@ jupyter = "^1.0.0"
 pytest = "^7.4.3"
 conda-lock = "^2.5.1"
 
+[tool.isort]
+known_first_party = ["yoshi"]
+multi_line_output = 3
+include_trailing_comma = true
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
