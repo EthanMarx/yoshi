@@ -1,6 +1,7 @@
 import logging
 import os
 
+from gwpy.io.kerberos import kinit
 from gwpy.timeseries import TimeSeriesDict
 from jsonargparse import ActionConfigFile, ArgumentParser
 from utils.logging import configure_logging
@@ -50,6 +51,9 @@ def main(args=None):
 
     args = parser.parse_args(args)
     configure_logging(args.log_file, args.verbose)
+
+    # authenticate
+    kinit(username=os.getenv("LIGO_USERNAME"))
 
     if args.subcommand == "query":
         args = args.query.as_dict()
