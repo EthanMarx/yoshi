@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "yoshi"
+version = "0.1.0"
+description = "Gravitational wave data discovery utilities powered by luigi and law"
+authors = ["Ethan Jacob Marx <ethan.marx@ligo.org>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+luigi = "^3.4.0"
+law = "^0.1.16"
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
+pytest = "^7.4.3"
+conda-lock = "^2.5.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
