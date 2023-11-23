@@ -8,33 +8,28 @@ import law
 import luigi
 from law.contrib import singularity
 
-root = Path(__file__).resolve().parent.parent.parent
+root = str(Path(__file__).resolve().parent.parent.parent)
 print(root)
 
 
 class YoshiSandbox(singularity.SingularitySandbox):
     sandbox_type = "yoshi"
-    config_section_prefix = "yoshi"
+
+    @property
+    def data_directories(self):
+        return ["/cvmfs", "/hdfs", "/gpfs", "/ceph", "/hadoop"]
 
     def _get_volumes(self):
         volumes = super()._get_volumes()
         if self.task and getattr(self.task, "dev", False):
             volumes[root] = "/opt/yoshi"
+
+        # bind data directories if they
+        # exist on this cluster
+        for dir in self.data_directories:
+            if os.path.exists(dir):
+                volumes[dir] = dir
         return volumes
-
-
-# TODO: what is this doing / why is this needed?
-law.config.update(
-    {
-        "yoshi": {
-            "stagein_dir_name": "stagein",
-            "stageout_dir_name": "stageout",
-            "law_executable": "law",
-        },
-        "yoshi_env": {},
-        "yoshi_volumes": {},
-    }
-)
 
 
 class YoshiTask(law.SandboxTask):
@@ -58,7 +53,7 @@ class YoshiTask(law.SandboxTask):
 
     @property
     def sandbox(self):
-        return f"singularity::{self.image}"
+        return f"yoshi::{self.image}"
 
     @property
     def singularity_forward_law(self) -> bool:
@@ -91,6 +86,7 @@ class YoshiTask(law.SandboxTask):
         return [self.command, "-c", "print('Hello world')"]
 
     def run(self):
+        # authenticate before entering sandbox
         try:
             subprocess.run(
                 self.command, capture_output=True, check=True, text=True

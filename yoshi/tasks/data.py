@@ -76,6 +76,7 @@ class Fetch(DataTask, law.LocalWorkflow):
     prefix = luigi.Parameter(default="yoshi")
     flags = luigi.ListParameter(default=["DCS-ANALYSIS_READY_C01:1"])
     segments_file = luigi.Parameter(default="")
+    channels = luigi.ListParameter(default=["H1:GDS-CALIB_STRAIN"])
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -149,7 +150,6 @@ class Fetch(DataTask, law.LocalWorkflow):
             log_file = log_file.sibling(fname, type="f")
             self.job_log = log_file.path
 
-        channels = [self.strain_channel] + self.witnesses
         args = [
             "--start",
             str(start),
@@ -162,6 +162,6 @@ class Fetch(DataTask, law.LocalWorkflow):
             "--output-directory",
             self.data_dir,
             "--channels",
-            "[" + ",".join(channels) + "]",
+            "[" + ",".join(self.channels) + "]",
         ]
         return self.cli + args
