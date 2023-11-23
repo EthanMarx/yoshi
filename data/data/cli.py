@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 
 from gwpy.io.kerberos import kinit
 from gwpy.timeseries import TimeSeriesDict
@@ -7,7 +8,7 @@ from jsonargparse import ActionConfigFile, ArgumentParser
 
 from data.find import DataQualityDict
 
-from .logging import configure_logging
+from .utils import configure_logging
 
 
 def fetch(
@@ -24,7 +25,9 @@ def fetch(
             end - start, start
         )
     )
-    X = TimeSeriesDict.get(start=start, end=end, channels=channels)
+    X = TimeSeriesDict.get(
+        start=start, end=end, channels=channels, verbose=True
+    )
 
     logging.info(f"Data downloaded, resampling to {sample_rate}Hz")
     return X.resample(sample_rate)
@@ -53,8 +56,11 @@ def main(args=None):
     args = parser.parse_args(args)
     configure_logging(args.log_file, args.verbose)
 
-    # authenticate
-    kinit(username=os.getenv("LIGO_USERNAME"))
+    # TODO: more robust method of finding kinit path in container
+    kinit(
+        username=os.getenv("LIGO_USERNAME"),
+        exe=shutil.which("/opt/env/bin/kinit"),
+    )
 
     if args.subcommand == "query":
         args = args.query.as_dict()
