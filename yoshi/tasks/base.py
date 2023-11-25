@@ -9,7 +9,6 @@ import luigi
 from law.contrib import singularity
 
 root = str(Path(__file__).resolve().parent.parent.parent)
-print(root)
 
 
 class YoshiSandbox(singularity.SingularitySandbox):
@@ -55,9 +54,12 @@ class YoshiTask(law.SandboxTask):
     def sandbox(self):
         return f"yoshi::{self.image}"
 
-    @property
     def singularity_forward_law(self) -> bool:
         return False
+
+    def sandbox_law_executable(self):
+        # law executable that is used inside the sandbox
+        return "/opt/env/bin/law"
 
     @property
     def singularity_allow_binds(self) -> bool:

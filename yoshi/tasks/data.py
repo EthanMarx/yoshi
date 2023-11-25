@@ -4,6 +4,15 @@ import law
 import luigi
 
 from yoshi.tasks.base import YoshiTask
+from yoshi.tasks.workflow import LDGCondorWorkflow
+
+DATAFIND_ENV_VARS = [
+    "KRB5_KTNAME",
+    "X509_USER_PROXY",
+    "GWDATAFIND_SERVER",
+    "NDSSERVER",
+    "LIGO_USERNAME",
+]
 
 
 class DataTask(YoshiTask):
@@ -26,12 +35,7 @@ class DataTask(YoshiTask):
 
     def sandbox_env(self, env):
         env = super().sandbox_env(env)
-        for envvar in [
-            "KRB5_KTNAME",
-            "X509_USER_PROXY",
-            "GWDATAFIND_SERVER",
-            "NDSSERVER",
-        ]:
+        for envvar in DATAFIND_ENV_VARS:
             value = os.getenv(envvar)
             if value is not None:
                 env[envvar] = value
@@ -66,24 +70,29 @@ class Query(DataTask):
         return self.cli + args
 
 
-class Fetch(DataTask, law.LocalWorkflow):
+class Fetch(DataTask, law.LocalWorkflow, LDGCondorWorkflow):
     start = luigi.FloatParameter()
     end = luigi.FloatParameter()
     sample_rate = luigi.FloatParameter()
-    data_dir = luigi.Parameter()
     min_duration = luigi.FloatParameter(default=0)
     max_duration = luigi.FloatParameter(default=-1)
+    data_dir = luigi.Parameter()
     prefix = luigi.Parameter(default="yoshi")
     flags = luigi.ListParameter(default=["DCS-ANALYSIS_READY_C01:1"])
     segments_file = luigi.Parameter(default="")
     channels = luigi.ListParameter(default=["H1:GDS-CALIB_STRAIN"])
+    log_dir = luigi.OptionalParameter()
 
     def __init__(self, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
+        os.makedirs(self.data_dir, exist_ok=True)
         if not self.segments_file:
             self.segments_file = os.path.join(self.data_dir, "segments.txt")
+
         if self.job_log and not os.path.isabs(self.job_log):
-            self.job_log = os.path.join(self.data_dir, self.job_log)
+            os.makedirs(self.log_dir, exist_ok=True)
+            self.job_log = os.path.join(self.log_dir, self.job_log)
 
     @law.dynamic_workflow_condition
     def workflow_condition(self) -> bool:

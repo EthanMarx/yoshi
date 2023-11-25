@@ -18,10 +18,13 @@ micromamba create -p /opt/env -f /opt/yoshi/data/conda-lock.yml
 
 # pip install our remaining packages, avoiding
 # installing dependencies since we don't want
-# to touch the libraries resolved by conda
+# to touch the libraries resolved by conda.
+# also install yoshi itself to be able to execute
+# tasks inside the container
 micromamba run -p /opt/env python -m \
     pip install --no-deps --no-build-isolation \
-        -e /opt/yoshi/data/
+        -e /opt/yoshi/data/ \
+        -e /opt/yoshi/
 
 # initialize our shell so that we can execute
 # commands in our environment at run time
