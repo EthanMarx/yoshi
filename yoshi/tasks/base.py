@@ -88,7 +88,6 @@ class YoshiTask(law.SandboxTask):
         return [self.command, "-c", "print('Hello world')"]
 
     def run(self):
-        # authenticate before entering sandbox
         try:
             subprocess.run(
                 self.command, capture_output=True, check=True, text=True

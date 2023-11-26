@@ -17,13 +17,27 @@ class LDGCondorWorkflow(htcondor.HTCondorWorkflow):
     condor_directory = luigi.Parameter()
     accounting_group_user = luigi.Parameter(default=os.getenv("LIGO_USER"))
     accounting_group = luigi.Parameter(default=os.getenv("LIGO_GROUP"))
-    request_disk = luigi.Parameter(default="10 GB")
-    request_memory = luigi.Parameter(default="10 GB")
+    request_disk = luigi.Parameter(default="1 GB")
+    request_memory = luigi.Parameter(default="1 GB")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.htcondor_log_dir.touch()
         self.htcondor_output_directory().touch()
+
+        # update location of where htcondor
+        # job files are stored
+        # TODO: law PR that makes this configuration
+        # easier / more pythonic
+        law.config.update(
+            {
+                "job": {
+                    "job_file_dir": self.job_file_dir,
+                    "job_file_dir_cleanup": "false",
+                    "job_file_dir_mkdtemp": "false",
+                }
+            }
+        )
 
     @property
     def name(self):
@@ -34,6 +48,10 @@ class LDGCondorWorkflow(htcondor.HTCondorWorkflow):
         return law.LocalDirectoryTarget(
             os.path.join(self.condor_directory, "logs")
         )
+
+    @property
+    def job_file_dir(self):
+        return self.htcondor_output_directory().child("jobs", type="d").path
 
     def htcondor_output_directory(self):
         return law.LocalDirectoryTarget(self.condor_directory)
